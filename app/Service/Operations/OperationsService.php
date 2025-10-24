@@ -16,7 +16,15 @@ interface OperationsService
 
     /**
      * Снять сумму со счёта
+     * @throws TransactionException
      * @throws InsufficientFundsException
      */
     function withdraw(UserBalance $ub, float $amount, ?string $comment = null): UserBalance;
+
+    /**
+     * Перевести сумму на другой счёт
+     * @throws TransactionException
+     * @throws InsufficientFundsException
+     */
+    function transfer(UserBalance $ubOut, UserBalance $ubIn, float $amount, ?string $comment = null): UserBalance;
 }

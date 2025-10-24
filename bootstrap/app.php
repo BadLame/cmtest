@@ -27,6 +27,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions
             ->render(fn (NotFoundHttpException $e, Request $r) => $errResponseFn($r, $e, 404))
-            ->render(fn (TransactionException $e, Request $r) => $errResponseFn($r, $e, 419))
-            ->render(fn (InsufficientFundsException $e, Request $r) => $errResponseFn($r, $e, 419));
+            ->render(fn (TransactionException $e, Request $r) => $errResponseFn($r, $e, 409))
+            ->render(fn (InsufficientFundsException $e, Request $r) => $errResponseFn($r, $e, 409));
     })->create();

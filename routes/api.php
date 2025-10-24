@@ -9,4 +9,5 @@ Route::name('operations.')->group(function () {
         ->name('balance');
     Route::post('/deposit', [OperationsController::class, 'deposit'])->name('deposit');
     Route::post('/withdraw', [OperationsController::class, 'withdraw'])->name('withdraw');
+    Route::post('/transfer', [OperationsController::class, 'transfer'])->name('transfer');
 });

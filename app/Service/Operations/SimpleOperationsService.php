@@ -69,4 +69,38 @@ class SimpleOperationsService implements OperationsService
 
         return $ub;
     }
+
+    function transfer(UserBalance $ubOut, UserBalance $ubIn, float $amount, ?string $comment = null): UserBalance
+    {
+        $tOut = new Transaction;
+        $tOut->user_id = $ubOut->user_id;
+        $tOut->type = TransactionType::TRANSFER_OUT;
+        $tOut->amount = $amount;
+        $tOut->comment = $comment;
+
+        if ($ubOut->balance < $tOut->amount) {
+            throw new InsufficientFundsException($tOut);
+        }
+
+        $tIn = $tOut->replicate(['type', 'user_id']);
+        $tIn->type = TransactionType::TRANSFER_IN;
+        $tIn->user_id = $ubIn->user_id;
+
+        $ubOut->balance -= $tOut->amount;
+        $ubIn->balance += $tOut->amount;
+
+        DB::beginTransaction();
+        try {
+            $this->ubRepo->save($ubOut);
+            $this->ubRepo->save($ubIn);
+            $this->transactionRepo->save($tOut);
+            $this->transactionRepo->save($tIn);
+            DB::commit();
+        } catch (Throwable $previous) {
+            DB::rollBack();
+            throw new TransactionException($tOut, $previous);
+        }
+
+        return $ubOut;
+    }
 }

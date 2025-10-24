@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Exceptions\InsufficientFundsException;
 use App\Exceptions\TransactionException;
 use App\Http\Requests\Operations\DepositOrWithdrawRequest;
+use App\Http\Requests\Operations\TransferRequest;
 use App\Http\Resources\UserBalanceResource;
 use App\Repository\UserBalance\UserBalanceRepository;
 use App\Service\Operations\OperationsService;
-use RuntimeException;
 
 class OperationsController extends Controller
 {
@@ -50,8 +50,15 @@ class OperationsController extends Controller
         return (new UserBalanceResource($ub))->response()->setStatusCode(200);
     }
 
-    function transfer()
+    function transfer(TransferRequest $request)
     {
-        throw new RuntimeException('To be implemented');
+        $ub = $this->operationsService->transfer(
+            $this->ubRepo->getByUserId($request->from_user_id),
+            $this->ubRepo->getByUserId($request->to_user_id),
+            $request->amount,
+            $request->comment
+        );
+
+        return (new UserBalanceResource($ub))->response()->setStatusCode(200);
     }
 }

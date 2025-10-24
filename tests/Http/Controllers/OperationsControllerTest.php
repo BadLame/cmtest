@@ -74,7 +74,7 @@ class OperationsControllerTest extends TestCase
             'amount' => $amount,
             'comment' => null,
         ])
-            ->assertStatus(419)
+            ->assertStatus(409)
             ->assertJsonStructure(['message', 'errors']);
 
         $this->assertEquals($ub->balance, $ub->fresh()->balance);
@@ -155,7 +155,7 @@ class OperationsControllerTest extends TestCase
         ];
 
         $this->postJson(route('operations.withdraw'), $requestData)
-            ->assertStatus(419);
+            ->assertStatus(409);
 
         $this->assertEquals($ub->balance, $ub->fresh()->balance);
     }
@@ -184,6 +184,90 @@ class OperationsControllerTest extends TestCase
             'user_id' => $ub->user_id,
             'amount' => $amount,
             'type' => TransactionType::WITHDRAW->value,
+            'comment' => $requestData['comment'],
+        ]);
+    }
+
+    // transfer
+
+    function testTransferWithNonExistingBalancesReturnsNotFound()
+    {
+        [$ubOut, $ubIn] = UserBalance::factory(2)->create();
+        $validRequestData = [
+            'from_user_id' => $ubOut->user_id,
+            'to_user_id' => $ubIn->user_id,
+            'amount' => fake()->randomFloat(2, 1, 100_500),
+            'comment' => fake()->boolean() ? fake()->words(asText: true) : null,
+        ];
+        $nonExistingUserId = (UserBalance::query()->max('user_id') ?: 0) + 1;
+        $invalidCases = [
+            ['from_user_id' => $nonExistingUserId],
+            ['to_user_id' => $nonExistingUserId],
+        ];
+
+        foreach ($invalidCases as $invalidCase) {
+            $requestData = array_merge($validRequestData, $invalidCase);
+            $this->postJson(route('operations.transfer'), $requestData)
+                ->assertNotFound();
+        }
+    }
+
+    function testTransferWithInsufficientFundsReturnsErrors()
+    {
+        [$ubOut, $ubIn] = UserBalance::factory(2)->create();
+        $requestData = [
+            'from_user_id' => $ubOut->user_id,
+            'to_user_id' => $ubIn->user_id,
+            'amount' => $ubOut->balance + 0.01,
+            'comment' => fake()->boolean() ? fake()->words(asText: true) : null,
+        ];
+
+        $this->postJson(route('operations.transfer'), $requestData)
+            ->assertStatus(409);
+
+        $this->assertEquals($ubOut->balance, $ubOut->fresh()->balance);
+        $this->assertEquals($ubIn->balance, $ubIn->fresh()->balance);
+    }
+
+    function testTransferManagesBalancesRight()
+    {
+        $rnd2 = fn (float $n) => round($n, 2);
+        [$ubOut, $ubIn] = UserBalance::factory(2)->create();
+        $amount = fake()->randomFloat(2, 1, $ubOut->balance);
+        $requestData = [
+            'from_user_id' => $ubOut->user_id,
+            'to_user_id' => $ubIn->user_id,
+            'amount' => $amount,
+            'comment' => fake()->boolean() ? fake()->words(asText: true) : null,
+        ];
+
+        $this->postJson(route('operations.transfer'), $requestData)
+            ->assertOk()
+            ->assertJson([
+                'data' => [
+                    'user_id' => $ubOut->user_id,
+                    'balance' => round($ubOut->balance - $amount, 2),
+                ],
+            ]);
+
+        $this->assertEquals(
+            $rnd2($ubOut->balance - $amount),
+            $rnd2($ubOut->fresh()->balance)
+        );
+        $this->assertEquals(
+            $rnd2($ubIn->balance + $amount),
+            $rnd2($ubIn->fresh()->balance)
+        );
+        $this->assertDatabaseHas('transactions', [
+            'user_id' => $ubOut->user_id,
+            'amount' => $amount,
+            'type' => TransactionType::TRANSFER_OUT->value,
+            'comment' => $requestData['comment'],
+        ]);
+        $this->assertDatabaseHas('transactions', [
+            'user_id' => $ubIn->user_id,
+            'amount' => $amount,
+            'type' => TransactionType::TRANSFER_IN->value,
             'comment' => $requestData['comment'],
         ]);
     }
