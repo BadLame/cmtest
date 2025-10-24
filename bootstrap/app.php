@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\TransactionException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,11 +17,14 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(
-            function (NotFoundHttpException $e, Request $request) {
-                return $request->expectsJson()
-                    ? response()->json(['data' => [], 'error' => 'Not found'], 404)
-                    : response()->noContent(404);
-            }
-        );
+        $errResponseFn = fn (Request $request, Throwable $error, int $code) => $request->expectsJson()
+            ? response()->json(
+                ['message' => $error->getMessage(), 'errors' => [$error->getMessage()]],
+                $code
+            )
+            : response()->noContent($code);
+
+        $exceptions
+            ->render(fn (NotFoundHttpException $e, Request $r) => $errResponseFn($r, $e, 404))
+            ->render(fn (TransactionException $e, Request $r) => $errResponseFn($r, $e, 419));
     })->create();

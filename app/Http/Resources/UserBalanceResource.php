@@ -15,7 +15,7 @@ class UserBalanceResource extends JsonResource
 
         return [
             'user_id' => $ub->user_id,
-            'balance' => $ub->balance,
+            'balance' => round($ub->balance, 2),
         ];
     }
 }

@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property float $amount
  * @property TransactionType $type
+ * @property string $comment
  * @property Carbon $updated_at
  * @property Carbon $created_at
  *
