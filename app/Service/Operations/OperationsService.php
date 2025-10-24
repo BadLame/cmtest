@@ -2,6 +2,7 @@
 
 namespace App\Service\Operations;
 
+use App\Exceptions\InsufficientFundsException;
 use App\Exceptions\TransactionException;
 use App\Models\UserBalance;
 
@@ -12,4 +13,10 @@ interface OperationsService
      * @throws TransactionException
      */
     function deposit(UserBalance $ub, float $amount, ?string $comment = null): UserBalance;
+
+    /**
+     * Снять сумму со счёта
+     * @throws InsufficientFundsException
+     */
+    function withdraw(UserBalance $ub, float $amount, ?string $comment = null): UserBalance;
 }

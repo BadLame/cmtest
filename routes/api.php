@@ -8,4 +8,5 @@ Route::name('operations.')->group(function () {
         ->where('user_id', '[0-9]+')
         ->name('balance');
     Route::post('/deposit', [OperationsController::class, 'deposit'])->name('deposit');
+    Route::post('/withdraw', [OperationsController::class, 'withdraw'])->name('withdraw');
 });

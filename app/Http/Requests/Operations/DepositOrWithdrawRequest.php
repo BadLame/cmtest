@@ -9,7 +9,7 @@ use Illuminate\Foundation\Http\FormRequest;
  * @property float $amount
  * @property string|null $comment
  */
-class DepositRequest extends FormRequest
+class DepositOrWithdrawRequest extends FormRequest
 {
     function rules(): array
     {

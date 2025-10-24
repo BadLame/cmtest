@@ -2,6 +2,7 @@
 
 namespace App\Service\Operations;
 
+use App\Exceptions\InsufficientFundsException;
 use App\Exceptions\TransactionException;
 use App\Models\Enums\TransactionType;
 use App\Models\Transaction;
@@ -35,6 +36,32 @@ class SimpleOperationsService implements OperationsService
             $this->ubRepo->save($ub);
             $this->transactionRepo->save($transaction);
             DB::commit();
+        } catch (Throwable $previous) {
+            DB::rollBack();
+            throw new TransactionException($transaction, $previous);
+        }
+
+        return $ub;
+    }
+
+    function withdraw(UserBalance $ub, float $amount, ?string $comment = null): UserBalance
+    {
+        $transaction = new Transaction;
+        $transaction->user_id = $ub->user_id;
+        $transaction->type = TransactionType::WITHDRAW;
+        $transaction->amount = $amount;
+        $transaction->comment = $comment;
+
+        if ($ub->balance < $transaction->amount) {
+            throw new InsufficientFundsException($transaction);
+        }
+
+        $ub->balance -= $transaction->amount;
+
+        DB::beginTransaction();
+        try {
+            $this->ubRepo->save($ub);
+            $this->transactionRepo->save($transaction);
         } catch (Throwable $previous) {
             DB::rollBack();
             throw new TransactionException($transaction, $previous);

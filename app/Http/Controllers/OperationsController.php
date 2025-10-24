@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Operations\DepositRequest;
+use App\Exceptions\InsufficientFundsException;
+use App\Exceptions\TransactionException;
+use App\Http\Requests\Operations\DepositOrWithdrawRequest;
 use App\Http\Resources\UserBalanceResource;
 use App\Repository\UserBalance\UserBalanceRepository;
 use App\Service\Operations\OperationsService;
@@ -24,7 +26,8 @@ class OperationsController extends Controller
         );
     }
 
-    function deposit(DepositRequest $request)
+    /** @throws TransactionException */
+    function deposit(DepositOrWithdrawRequest $request)
     {
         $ub = $this->operationsService->deposit(
             $this->ubRepo->getOrNewByUserId($request->user_id),
@@ -35,14 +38,20 @@ class OperationsController extends Controller
         return (new UserBalanceResource($ub))->response()->setStatusCode(200);
     }
 
-    function withdraw()
+    /** @throws InsufficientFundsException */
+    function withdraw(DepositOrWithdrawRequest $request)
     {
-        throw new RuntimeException('To be implemented');
+        $ub = $this->operationsService->withdraw(
+            $this->ubRepo->getByUserId($request->user_id),
+            $request->amount,
+            $request->comment
+        );
+
+        return (new UserBalanceResource($ub))->response()->setStatusCode(200);
     }
 
     function transfer()
     {
         throw new RuntimeException('To be implemented');
-
     }
 }
