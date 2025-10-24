@@ -19,6 +19,7 @@ class OperationsController extends Controller
     {
     }
 
+    /** Просмотр баланса пользователя */
     function balance(int $user_id): UserBalanceResource
     {
         return new UserBalanceResource(
@@ -26,7 +27,10 @@ class OperationsController extends Controller
         );
     }
 
-    /** @throws TransactionException */
+    /**
+     * Начисление средств
+     * @throws TransactionException
+     */
     function deposit(DepositOrWithdrawRequest $request)
     {
         $ub = $this->operationsService->deposit(
@@ -38,7 +42,10 @@ class OperationsController extends Controller
         return (new UserBalanceResource($ub))->response()->setStatusCode(200);
     }
 
-    /** @throws InsufficientFundsException */
+    /**
+     * Снятие средств
+     * @throws InsufficientFundsException|TransactionException
+     */
     function withdraw(DepositOrWithdrawRequest $request)
     {
         $ub = $this->operationsService->withdraw(
@@ -50,6 +57,10 @@ class OperationsController extends Controller
         return (new UserBalanceResource($ub))->response()->setStatusCode(200);
     }
 
+    /**
+     * Перевод средств от пользователя пользователю
+     * @throws InsufficientFundsException|TransactionException
+     */
     function transfer(TransferRequest $request)
     {
         $ub = $this->operationsService->transfer(
