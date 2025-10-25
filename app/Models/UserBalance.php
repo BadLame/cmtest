@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use Database\Factories\UserBalanceFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -14,11 +16,15 @@ use Illuminate\Support\Carbon;
  * @property Carbon $updated_at
  * @property Carbon $created_at
  *
+ * @property Collection<Transaction> $transactions
+ *
  * @method static UserBalanceFactory factory($count = null, $state = [])
  */
 class UserBalance extends Model
 {
     use HasFactory;
+
+    protected $table = 'users_balances';
 
     protected $fillable = [
         'user_id',
@@ -28,5 +34,10 @@ class UserBalance extends Model
         'balance' => 0,
     ];
 
-    protected $table = 'users_balances';
+    // Relations
+
+    function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'user_id', 'user_id');
+    }
 }

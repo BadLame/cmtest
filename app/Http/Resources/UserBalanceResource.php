@@ -16,6 +16,10 @@ class UserBalanceResource extends JsonResource
         return [
             'user_id' => $ub->user_id,
             'balance' => round($ub->balance, 2),
+            'transactions' => $this->whenLoaded(
+                'transactions',
+                fn () => TransactionResource::collection($ub->transactions)
+            ),
         ];
     }
 }

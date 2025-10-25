@@ -24,6 +24,7 @@ class OperationsController extends Controller
     {
         return new UserBalanceResource(
             $this->ubRepo->getByUserId($user_id)
+                ->load(['transactions' => fn ($q) => $q->orderByDesc('id')])
         );
     }
 
