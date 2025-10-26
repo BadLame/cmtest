@@ -3,12 +3,15 @@
 namespace App\Repository\UserBalance;
 
 use App\Models\UserBalance;
+use Illuminate\Database\Eloquent\Builder;
 
 class SimpleUserBalanceRepository implements UserBalanceRepository
 {
-    function getByUserId(int $userId): UserBalance
+    function getByUserId(int $userId, bool $withTransactions = true): UserBalance
     {
-        return UserBalance::query()->where('user_id', $userId)->firstOrFail();
+        return UserBalance::query()
+            ->when($withTransactions, fn (Builder $q) => $q->with(['transactions' => fn ($q) => $q->orderByDesc('id')]))
+            ->where('user_id', $userId)->firstOrFail();
     }
 
     function getOrNewByUserId(int $userId): UserBalance

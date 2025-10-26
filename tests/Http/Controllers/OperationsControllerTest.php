@@ -3,6 +3,7 @@
 namespace Tests\Http\Controllers;
 
 use App\Models\Enums\TransactionType;
+use App\Models\Transaction;
 use App\Models\UserBalance;
 use App\Repository\UserBalance\SimpleUserBalanceRepository;
 use App\Repository\UserBalance\UserBalanceRepository;
@@ -17,10 +18,19 @@ class OperationsControllerTest extends TestCase
     function testBalanceShowsBalanceForExistingRecord()
     {
         $ub = UserBalance::factory()->create();
+        Transaction::factory(rand(5, 10), ['user_id' => $ub->user_id])->create();
 
         $this->getJson(route('operations.balance', $ub->user_id))
             ->assertOk()
-            ->assertJson(['data' => ['user_id' => $ub->user_id, 'balance' => $ub->balance]]);
+            ->assertJsonStructure([
+                'data' => [
+                    'user_id',
+                    'balance',
+                    'transactions' => [
+                        '*' => ['id', 'user_id', 'amount', 'type', 'comment'],
+                    ],
+                ],
+            ]);
     }
 
     function testBalanceReturns_404ForNonExistingRecord()

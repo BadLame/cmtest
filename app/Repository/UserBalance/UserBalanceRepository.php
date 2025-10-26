@@ -11,7 +11,7 @@ interface UserBalanceRepository
      * Получить существующую запись или бросить исключение "запись не найдена"
      * @throws NotFoundHttpException
      */
-    function getByUserId(int $userId): UserBalance;
+    function getByUserId(int $userId, bool $withTransactions = true): UserBalance;
 
     /** Получить существующую или создать новую запись (без сохранения в БД) */
     function getOrNewByUserId(int $userId): UserBalance;

@@ -26,6 +26,10 @@ class Transaction extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'user_id',
+    ];
+
     protected $casts = [
         'type' => TransactionType::class,
     ];
