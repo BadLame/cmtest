@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class SimpleUserBalanceRepository implements UserBalanceRepository
 {
-    function getByUserId(int $userId, bool $withTransactions = true): UserBalance
+    function getByUserId(int $userId, bool $withTransactions = false): UserBalance
     {
         return UserBalance::query()
             ->when($withTransactions, fn (Builder $q) => $q->with(['transactions' => fn ($q) => $q->orderByDesc('id')]))

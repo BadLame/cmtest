@@ -23,7 +23,7 @@ class OperationsController extends Controller
     function balance(int $user_id): UserBalanceResource
     {
         return new UserBalanceResource(
-            $this->ubRepo->getByUserId($user_id)
+            $this->ubRepo->getByUserId($user_id, true)
         );
     }
 
